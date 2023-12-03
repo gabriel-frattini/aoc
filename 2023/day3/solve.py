@@ -2,6 +2,8 @@ SYMBOLS = ["-", "*", "&", "$", "@", "#", "=", "/", "+", "%"]
 
 DIGITS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
 
+b = 0
+
 
 def parse_num(i, j, rows):
     cell = rows[i][j]
@@ -11,14 +13,17 @@ def parse_num(i, j, rows):
     num = ""
 
     k = j
-    while rows[i][k - 1].isdigit():
+
+    while k > 0 and rows[i][k - 1].isdigit():
         k -= 1
+
+    start_idx = k
 
     while k < len(rows[i]) and rows[i][k].isdigit():
         num = f"{num}{rows[i][k]}"
         k += 1
 
-    return int(num) or None
+    return start_idx, (int(num) if num else None)
 
 
 def get_neighbors_to_symbol(i, j, rows, symbols):
@@ -30,16 +35,19 @@ def get_neighbors_to_symbol(i, j, rows, symbols):
     while k < 2:
         l = -1
         while l < 2:
-            try:
-                if rows[i + k][j + l] in symbols:
-                    neighbor = parse_num(i + k, j + l, rows)
-                    if neighbor:
-                        neighbors.append(neighbor)
-                        l += len(str(neighbor))
 
-            except BaseException as e:
-                # index out of bounce
-                pass
+            if i + k < 0 or i + k >= len(rows) or j + l < 0 or j + l >= len(rows[i + k]):
+                l += 1
+                continue
+
+            if rows[i + k][j + l] in symbols:
+                start, neighbor = parse_num(i + k, j + l, rows)
+                if not neighbor:
+                    break
+                if neighbor in neighbors and start <= j <= start + len(str(neighbor)):
+                    break
+
+                neighbors.append(neighbor)
 
             l += 1
         k += 1
